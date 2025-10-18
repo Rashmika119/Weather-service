@@ -1,4 +1,4 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Weather } from './weather.entity';
 import { Between, Repository } from 'typeorm';
 import { weatherSearchDto } from './weatherSearch.dto';
@@ -8,11 +8,14 @@ require('dotenv').config();
 
 @Injectable()
 export class WeatherService {
+  private readonly logger = new Logger(WeatherService.name);
+
   constructor(
     @InjectRepository(Weather)
     private readonly weatherRepo: Repository<Weather>,
   ) { }
   async getAllWeatherConditions(): Promise<Weather[]> {
+    this.logger.log('Fetching all weather records');
     return await this.weatherRepo.find();
   }
   async createWeather(
@@ -23,13 +26,8 @@ export class WeatherService {
     condition: string
   ): Promise<Weather> {
 
-    const weather = this.weatherRepo.create({
-      date,
-      location,
-      tempMax,
-      tempMin,
-      condition
-    });
+    this.logger.debug(`Creating weather for ${location} on ${date.toISOString()}`);
+    const weather = this.weatherRepo.create({ date, location, tempMax, tempMin, condition });
     await this.weatherRepo.save(weather);
     return weather;
   }
@@ -41,17 +39,18 @@ export class WeatherService {
   //get weather forcast for next 7 days from start date
   async getWeatherForSevenDays(startDate: string, location: string): Promise<Weather[]> {
     if (!startDate || !location) {
+      this.logger.warn('startDate or location missing');
       throw new HttpException("startDate and location required", 400)
     }
-    
+
 
     if (this.delay > 0) {
-      console.log("delay happens")
+      this.logger.debug(`Artificial delay applied: ${this.delay}ms`);
       await new Promise(res => setTimeout(res, this.delay));
     }
 
     if (Math.random() < this.failRate) {
-      console.log("random failure generated");
+      this.logger.warn('Simulated weather failure triggered');
       throw new Error('Simulated weather failure');
     }
 
@@ -74,9 +73,11 @@ export class WeatherService {
 
 
   async deleteWeather(location: string): Promise<void> {
+    this.logger.warn(`Deleting weather records for ${location}`);
     const result = await this.weatherRepo.delete(location);
 
     if (result.affected === 0) {
+      this.logger.error(`Weather for location ${location} not found`);
       throw new NotFoundException(`Weather for location, ${location} is not found`)
     }
 
@@ -84,6 +85,7 @@ export class WeatherService {
 
 
   async weatherSearch(weatherSearchDto: weatherSearchDto): Promise<Weather[]> {
+    this.logger.log(`Searching weather with filters: ${JSON.stringify(weatherSearchDto)}`);
     const { date, location, condition } = weatherSearchDto;
 
     const query = this.weatherRepo.createQueryBuilder('weather')
@@ -115,14 +117,17 @@ export class WeatherService {
 
   }
   async getWeatherByLocation(location: string): Promise<Weather> {
+    this.logger.log(`Fetching weather for location: ${location}`);
     const weather = await this.weatherRepo.findOne({ where: { location } })
     if (!weather) {
+      this.logger.error(`Weather for ${location} not found`);
       throw new NotFoundException(`Weather in ${weather} ,is not found`);
     }
     return weather;
   }
 
   async delayUpdate(delayValue: number) {
+    this.logger.debug(`Updating artificial delay to ${delayValue}ms`);
     this.delay = delayValue;
   }
 
