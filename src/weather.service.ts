@@ -1,7 +1,7 @@
 import { HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { Weather } from './weather.entity';
+import { Weather } from './Entity/weather.entity';
 import { Between, Repository } from 'typeorm';
-import { weatherSearchDto } from './weatherSearch.dto';
+import { weatherSearchDto } from './DTO/weatherSearch.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 
 require('dotenv').config();

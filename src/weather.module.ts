@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { WeatherController } from './weather.controller';
 import { WeatherService } from './weather.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Weather } from './weather.entity';
+import { Weather } from './Entity/weather.entity';
 
 @Module({
   imports: [

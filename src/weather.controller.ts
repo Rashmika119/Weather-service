@@ -1,7 +1,7 @@
 import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Post, Put, Query } from '@nestjs/common';
 
-import type { weatherSearchDto } from './weatherSearch.dto';
-import { Weather } from './weather.entity';
+import type { weatherSearchDto } from './DTO/weatherSearch.dto';
+import { Weather } from './Entity/weather.entity';
 import { WeatherService } from './weather.service';
 
 @Controller('weather')
