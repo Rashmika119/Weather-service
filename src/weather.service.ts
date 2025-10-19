@@ -1,4 +1,4 @@
-import { HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { Weather } from './weather.entity';
 import { Between, Repository } from 'typeorm';
 import { weatherSearchDto } from './weatherSearch.dto';
@@ -16,7 +16,12 @@ export class WeatherService {
   ) { }
   async getAllWeatherConditions(): Promise<Weather[]> {
     this.logger.log('Fetching all weather records');
+    try{
     return await this.weatherRepo.find();
+                    }catch(error){
+      this.logger.error("error of getting weather details ",error.stack)
+      throw new InternalServerErrorException("failed to get weather ");
+    }
   }
   async createWeather(
     date: Date,
@@ -25,11 +30,15 @@ export class WeatherService {
     tempMax: number,
     condition: string
   ): Promise<Weather> {
-
+try{
     this.logger.debug(`Creating weather for ${location} on ${date.toISOString()}`);
     const weather = this.weatherRepo.create({ date, location, tempMax, tempMin, condition });
     await this.weatherRepo.save(weather);
     return weather;
+                    }catch(error){
+      this.logger.error("error of creating weather ",error.stack)
+      throw new InternalServerErrorException("failed to create weather ");
+    }
   }
 
   private delay = Number(process.env.WEATHER_DELAY_MS) || 0;
@@ -60,7 +69,7 @@ export class WeatherService {
     const end = new Date(start);
     end.setDate(end.getDate() + 6);
     end.setHours(23, 59, 59, 999);
-
+try{
 
     return this.weatherRepo.find({
       where: {
@@ -68,17 +77,26 @@ export class WeatherService {
         date: Between(start, end),
       },
     });
+                    }catch(error){
+      this.logger.error("error of getting weather for seven days  ",error.stack)
+      throw new InternalServerErrorException("failed to get weather for seven days");
+    }
 
   }
 
 
   async deleteWeather(location: string): Promise<void> {
     this.logger.warn(`Deleting weather records for ${location}`);
+    try{
     const result = await this.weatherRepo.delete(location);
 
     if (result.affected === 0) {
       this.logger.error(`Weather for location ${location} not found`);
       throw new NotFoundException(`Weather for location, ${location} is not found`)
+    }
+                        }catch(error){
+      this.logger.error("error of deleting weather ",error.stack)
+      throw new InternalServerErrorException("failed to delete weather ");
     }
 
   }
@@ -87,7 +105,7 @@ export class WeatherService {
   async weatherSearch(weatherSearchDto: weatherSearchDto): Promise<Weather[]> {
     this.logger.log(`Searching weather with filters: ${JSON.stringify(weatherSearchDto)}`);
     const { date, location, condition } = weatherSearchDto;
-
+try{
     const query = this.weatherRepo.createQueryBuilder('weather')
 
     if (date) {
@@ -114,16 +132,25 @@ export class WeatherService {
       })
     }
     return await query.getMany();
+                        }catch(error){
+      this.logger.error("error of searching weather ",error.stack)
+      throw new InternalServerErrorException("failed to search weather ");
+    }
 
   }
   async getWeatherByLocation(location: string): Promise<Weather> {
     this.logger.log(`Fetching weather for location: ${location}`);
+    try{
     const weather = await this.weatherRepo.findOne({ where: { location } })
     if (!weather) {
       this.logger.error(`Weather for ${location} not found`);
       throw new NotFoundException(`Weather in ${weather} ,is not found`);
     }
     return weather;
+                        }catch(error){
+      this.logger.error("error of get weather by location ",error.stack)
+      throw new InternalServerErrorException("failed to getweather by location ");
+    }
   }
 
   async delayUpdate(delayValue: number) {
