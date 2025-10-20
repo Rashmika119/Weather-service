@@ -53,16 +53,6 @@ export class WeatherController {
       throw new InternalServerErrorException('Failed to fetch weather for location');
     }
   }
-  @Get('/seven-days/:date/:location')
-  getSeventDayForcast(@Param('date') date: string, @Param('location') location: string) {
-    this.logger.log(`GET /weather/seven-days/${date}/${location} called`);
-    try {
-      return this.weatherService.getWeatherForSevenDays(date, location);
-    } catch (error) {
-      this.logger.error('Error fetching seven-day forecast', error.stack);
-      throw new InternalServerErrorException('Failed to fetch seven-day forecast');
-    }
-  }
 
   @Delete('/:location')
   async deleteWeather(@Param('location') location: string) {

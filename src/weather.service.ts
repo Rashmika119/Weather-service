@@ -38,39 +38,6 @@ export class WeatherService {
 
 
   //get weather forcast for next 7 days from start date
-  async getWeatherForSevenDays(startDate: string, location: string): Promise<Weather[]> {
-    if (!startDate || !location) {
-      this.logger.warn('startDate or location missing');
-      throw new HttpException("startDate and location required", 400)
-    }
-
-
-    if (this.delay > 0) {
-      this.logger.debug(`Artificial delay applied: ${this.delay}ms`);
-      await new Promise(res => setTimeout(res, this.delay));
-    }
-
-    if (Math.random() < this.failRate) {
-      this.logger.warn('Simulated weather failure triggered');
-      throw new Error('Simulated weather failure');
-    }
-
-    const start = new Date(startDate + 'T00:00:00Z');
-    start.setHours(0, 0, 0, 0);
-    //get a copy of original start date so the original one dont want to change
-    const end = new Date(start);
-    end.setDate(end.getDate() + 6);
-    end.setHours(23, 59, 59, 999);
-
-      return this.weatherRepo.find({
-        where: {
-          location,
-          date: Between(start, end),
-        },
-      });
-
-  }
-
 
   async deleteWeather(location: string): Promise<void> {
     this.logger.warn(`Deleting weather records for ${location}`);
